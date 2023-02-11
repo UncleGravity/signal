@@ -9,7 +9,7 @@ import { Beat, createBeatsInRange } from "../helpers/mapBeats"
 import {
   controllerMidiEvent,
   noteOffMidiEvent,
-  noteOnMidiEvent,
+  noteOnMidiEvent
 } from "../midi/MidiEvent"
 import { getStatusEvents } from "../track/selector"
 import { ITrackMute } from "../trackMute/ITrackMute"
@@ -258,6 +258,10 @@ export default class Player {
     timestampNow: number = performance.now()
   ) {
     this._output.sendEvent(event, delayTime, timestampNow)
+    // console.log("sendEvent", event, delayTime, timestampNow)
+    if(event.subtype === "noteOn" || event.subtype === "noteOff") {
+      console.log("sendEvent", event, delayTime, timestampNow)
+    }
   }
 
   private syncPosition = throttle(() => {
