@@ -3,6 +3,7 @@ import Player from "../../common/player"
 import Song, { emptySong } from "../../common/song"
 import TrackMute from "../../common/trackMute"
 import { pushHistory, SerializedState } from "../actions/history"
+import AdbObject from "../components/Navigation/AdbButton"
 import { GroupOutput } from "../services/GroupOutput"
 import { MIDIInput, previewMidiInput } from "../services/MIDIInput"
 import { MIDIRecorder } from "../services/MIDIRecorder"
@@ -39,6 +40,7 @@ export default class RootStore {
   readonly synthGroup = new GroupOutput()
   readonly midiInput = new MIDIInput()
   readonly midiRecorder: MIDIRecorder
+  adbObject: AdbObject
 
   constructor() {
     makeObservable(this, {
@@ -55,6 +57,8 @@ export default class RootStore {
       "https://cdn.jsdelivr.net/gh/ryohey/signal@6959f35/public/A320U_drums.sf2"
     )
     this.synthGroup.outputs.push({ synth: this.synth, isEnabled: true })
+
+    this.adbObject = new AdbObject()
 
     this.player = new Player(
       this.synthGroup,
