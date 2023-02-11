@@ -1,6 +1,5 @@
 import styled from "@emotion/styled"
 import Color from "color"
-import Forum from "mdi-react/ForumIcon"
 import Help from "mdi-react/HelpCircleIcon"
 import Settings from "mdi-react/SettingsIcon"
 import { observer } from "mobx-react-lite"
@@ -13,8 +12,8 @@ import ArrangeIcon from "../../images/icons/arrange.svg"
 import PianoIcon from "../../images/icons/piano.svg"
 import TempoIcon from "../../images/icons/tempo.svg"
 import Logo from "../../images/logo-circle.svg"
+import { AdbButton } from "./AdbButton"
 import { FileMenuButton } from "./FileMenuButton"
-import { UserButton } from "./UserButton"
 
 const BannerContainer = styled.div`
   background: ${({ theme }) => theme.themeColor};
@@ -154,6 +153,16 @@ export const Navigation: FC = observer(() => {
 
       <FlexibleSpacer />
 
+      {/* ADB Button *****************************************************************/}
+      <AdbButton />
+      {
+      /*
+      <Tab onClick={adbButtonClicked()}>
+        <Help style={IconStyle} />
+        <TabTitle>"ADB"</TabTitle>
+      </Tab>*/
+      }
+
       <Tab
         onClick={useCallback(
           () => (rootViewStore.openSettingDialog = true),
@@ -173,14 +182,14 @@ export const Navigation: FC = observer(() => {
         </TabTitle>
       </Tab>
 
-      <Tab id="open-gitter-button">
+      {/* <Tab id="open-gitter-button">
         <Forum style={IconStyle} />
         <TabTitle>
           <Localized default="Open Chat">open-chat</Localized>
         </TabTitle>
-      </Tab>
+      </Tab> */}
 
-      <UserButton />
+      {/* <UserButton /> */}
     </Container>
   )
 })
