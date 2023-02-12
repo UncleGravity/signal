@@ -2,6 +2,7 @@ import range from "lodash/range"
 import throttle from "lodash/throttle"
 import { AnyEvent, MIDIControlEvents } from "midifile-ts"
 import { computed, makeObservable, observable } from "mobx"
+import AdbObject from "../../main/components/Navigation/AdbButton"
 import { SendableEvent, SynthOutput } from "../../main/services/SynthOutput"
 import { SongStore } from "../../main/stores/SongStore"
 import { filterEventsWithRange } from "../helpers/filterEvents"
@@ -38,6 +39,7 @@ export default class Player {
   private _interval: number | null = null
   private _currentTick = 0
   private _isPlaying = false
+  private _adbObject: AdbObject
 
   disableSeek: boolean = false
   isMetronomeEnabled: boolean = false
@@ -48,7 +50,8 @@ export default class Player {
     output: SynthOutput,
     metronomeOutput: SynthOutput,
     trackMute: ITrackMute,
-    songStore: SongStore
+    songStore: SongStore,
+    adbObject: AdbObject
   ) {
     makeObservable<Player, "_currentTick" | "_isPlaying">(this, {
       _currentTick: observable,
@@ -63,6 +66,7 @@ export default class Player {
     this._metronomeOutput = metronomeOutput
     this._trackMute = trackMute
     this._songStore = songStore
+    this._adbObject = adbObject
   }
 
   private get song() {
@@ -258,9 +262,14 @@ export default class Player {
     timestampNow: number = performance.now()
   ) {
     this._output.sendEvent(event, delayTime, timestampNow)
-    // console.log("sendEvent", event, delayTime, timestampNow)
-    if(event.subtype === "noteOn" || event.subtype === "noteOff") {
-      console.log("sendEvent", event, delayTime, timestampNow)
+    
+    // const { adbObject } = useStores()
+    if(event.subtype === "noteOn") {
+      // console.log("sendEvent", event, delayTime, timestampNow)
+      this._adbObject.sendNote(event.noteNumber, true)
+    } else if(event.subtype === "noteOff") {
+      // console.log("sendEvent", event, delayTime, timestampNow)
+      this._adbObject.sendNote(event.noteNumber, false)
     }
   }
 

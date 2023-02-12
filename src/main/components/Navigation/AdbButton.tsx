@@ -1,5 +1,7 @@
+import { faCircle } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { AdbClient, KeyStore, Options, Shell, WebUsbTransport } from '@vieratech/wadb';
-import { makeObservable, observable } from 'mobx';
+import { action, makeObservable, observable } from 'mobx';
 import { observer } from "mobx-react-lite";
 import { FC } from "react";
 import { useStores } from "../../hooks/useStores";
@@ -22,26 +24,30 @@ class MyKeyStore implements KeyStore {
 ////////////////////////////////////////////////////////////////////////////
 // ADB Class
 export default class AdbObject {
-  commandQueue: Array<Function> = [];
   transport: WebUsbTransport | null = null;
   adbClient: AdbClient | null = null;
   shell: Shell | null = null;
   keyStore: KeyStore
   isConnected: boolean = false;
+  private commandQueue: Array<string> = [];
+  private processing = false;
 
   constructor() {
 
     makeObservable<AdbObject>(this, {
       shell: observable,
-      isConnected: observable
+      isConnected: observable,
+      connect: action,
+      disconnect: action
     })
   
     // ADB Crypto
     this.keyStore = new MyKeyStore();
+    this.adbCommandCallback = this.adbCommandCallback.bind(this);
   }
 
   ////////////////////////////////////////////////////////////////////////////
-  // Connect
+  // Connection
 
   checkConnection() {
     if (this.transport == null) {
@@ -55,7 +61,7 @@ export default class AdbObject {
     }
   }
 
-  async connect() {
+  async connect(callback: (internalVar: string) => void) {
     if(this.checkConnection()) {
       // already connected to adb
       console.log("already connected to adb")
@@ -63,6 +69,9 @@ export default class AdbObject {
     }
     
     try {
+      
+      // Setup external callback
+      // this._onDisconnectCallbac = callback;
 
       // ADB Crypto
       const options: Options = {
@@ -76,14 +85,21 @@ export default class AdbObject {
       this.adbClient = new AdbClient(this.transport, options, this.keyStore);
       await this.adbClient.connect();
       this.shell = await this.adbClient.interactiveShell(this.adbCommandCallback);
+      this.adbCommandCallback = this.adbCommandCallback.bind(this);
+      this.adbClient.onDisconnectCallback = callback
+      this.isConnected = true
+      this.processing = false;
+      this.commandQueue = [];
+      this.addToCommandQueue("su")
 
     } catch (e) {
       console.error('Connection Failed: ', e);
-      this.disconnect();
+      // this.disconnect();
     }
   }
 
   async disconnect() {
+
     if (this.transport != null) {
       try {
         await this.shell?.close();
@@ -92,17 +108,67 @@ export default class AdbObject {
         console.error('Error closing the connection', e);
       }
     }
+
+    this.isConnected = false
+    this.commandQueue  = [];
+    this.transport = null;
+    this.adbClient = null;
+    this.shell = null;
+
   }
 
-  adbCommandCallback(text: string) {
-    console.log('adbCommandCallback: ' + text);
+  ////////////////////////////////////////////////////////////////////////////
+  // Commands
+
+  async sleep(seconds: number) {
+    return new Promise((resolve) =>setTimeout(resolve, seconds * 1000));
   }
 
-  async sendCommand(cmd: string, newline = true) {
+  // send note and on/off as command to adb
+  // convert midi note to frequency
+  // use sendevent /dev/input/event1 18 1 $freq
+  sendNote(note: number, on: boolean) {
     if (!this.checkConnection()) {
       // not connected to adb, cannot send
       console.log("Not connected to ADB. Cannot send.")
-      this.disconnect()
+      return;
+    }
+    // console.log("Sending note: " + note + " on: " + on + "")
+    //convert note to frequency
+    let freq = on ? 440 * Math.pow(2, (note - 69) / 12) : 0
+    let cmdString = "sendevent /dev/input/event1 18 1 " + freq
+    this.addToCommandQueue(cmdString)
+  }
+
+  public addToCommandQueue(cmd: string) {
+    this.commandQueue.push(cmd);
+    this.processQueue();
+  }
+
+  private processQueue() {
+    if (!this.processing && this.commandQueue.length > 0) {
+      this.processing = true;
+      const cmd = this.commandQueue.shift();
+      this.sendCommand(cmd!);
+    }
+  }
+
+  private async adbCommandCallback(result: string) {
+
+    // console.log('adbCommandCallback:',result);
+    if(!result.includes("bengal")) {
+      // await this.sleep(0.01);
+      this.processing = false;
+      this.processQueue()
+    }
+  }
+
+  async sendCommand(cmd: string, newline = true) {
+    // console.log("Sending command: " + cmd)
+    if (!this.checkConnection()) {
+      // not connected to adb, cannot send
+      console.log("Not connected to ADB. Cannot send.")
+      // this.disconnect()
       return false;
     }
     let nl = "";
@@ -119,11 +185,7 @@ export default class AdbObject {
       });
     return true;
   }
-
 }
-
-import { faCircle } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export const AdbButton: FC = observer(() => {
 
@@ -133,8 +195,16 @@ export const AdbButton: FC = observer(() => {
   let { song, adbObject } = useStores()
 
   function connectToAdb() {
-    // adbObject.connect()
-    console.log(adbObject.isConnected)
+    if(!adbObject.isConnected) {
+      adbObject.connect(onAdbDisconnect)
+    } else {
+      adbObject.disconnect()
+    }
+  }
+
+  function onAdbDisconnect(error: string) {
+    console.log("onAdbDisconnect: " + error)
+    adbObject.disconnect()
   }
 
   function sendAdbCommand() {
@@ -146,7 +216,7 @@ export const AdbButton: FC = observer(() => {
       {/* <Help style={IconStyle} /> */}
       {/* Green icon rendered next to the title, centered vertically and horizontally */}
       <FontAwesomeIcon icon={faCircle} style={{ color: adbObject.isConnected ? '#8BC34A' : '#FF6961' }} />
-      <TabTitle>Connect</TabTitle>
+      <TabTitle>{ adbObject.isConnected ? 'Disconnect' : 'Connect' }</TabTitle>
     </Tab>
     )
 })

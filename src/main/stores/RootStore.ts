@@ -64,7 +64,8 @@ export default class RootStore {
       this.synthGroup,
       metronomeSynth,
       this.trackMute,
-      this
+      this,
+      this.adbObject
     )
     this.midiRecorder = new MIDIRecorder(this.player, this)
 

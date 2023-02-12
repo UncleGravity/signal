@@ -1,4 +1,5 @@
 import Player from "../../common/player"
+import AdbObject from "../../main/components/Navigation/AdbButton"
 import { SoundFontSynth } from "../../main/services/SoundFontSynth"
 import { AuthStore } from "../../main/stores/AuthStore"
 import { CommunitySongStore } from "./CommunitySongStore"
@@ -10,6 +11,7 @@ export default class RootStore {
   readonly communitySongStore = new CommunitySongStore()
   readonly player: Player
   readonly synth: SoundFontSynth
+  adbObject: AdbObject
 
   constructor() {
     const context = new (window.AudioContext || window.webkitAudioContext)()
@@ -28,11 +30,16 @@ export default class RootStore {
       shouldPlayTrack: () => true,
     }
 
+    // This will never be used, but it's required to instantiate the Player
+    // Figure out a better way to do this
+    this.adbObject = new AdbObject()
+
     this.player = new Player(
       this.synth,
       dummySynth,
       dummyTrackMute,
-      this.songStore
+      this.songStore,
+      this.adbObject
     )
   }
 }
