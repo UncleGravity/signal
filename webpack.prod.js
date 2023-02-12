@@ -36,23 +36,23 @@ module.exports = merge(common, {
       analyzerMode: "static",
       openAnalyzer: false,
     }),
-    new SentryWebpackPlugin({
-      authToken: process.env.SENTRY_AUTH_TOKEN,
-      org: "codingcafe_jp",
-      project: "signal",
-      release: process.env.VERCEL_GIT_COMMIT_SHA,
-      include: "./dist",
-      ignore: [
-        "node_modules",
-        "webpack.common.js",
-        "webpack.dev.js",
-        "webpack.prod.js",
-      ],
-      dryRun: process.env.VERCEL_ENV !== "production",
-      debug: true,
-      errorHandler: (err, invokeErr, compilation) => {
-        compilation.warnings.push("Sentry CLI Plugin: " + err.message)
-      },
-    }),
+    // new SentryWebpackPlugin({
+    //   authToken: process.env.SENTRY_AUTH_TOKEN,
+    //   org: "codingcafe_jp",
+    //   project: "signal",
+    //   release: process.env.VERCEL_GIT_COMMIT_SHA,
+    //   include: "./dist",
+    //   ignore: [
+    //     "node_modules",
+    //     "webpack.common.js",
+    //     "webpack.dev.js",
+    //     "webpack.prod.js",
+    //   ],
+    //   dryRun: process.env.VERCEL_ENV !== "production",
+    //   debug: true,
+    //   errorHandler: (err, invokeErr, compilation) => {
+    //     compilation.warnings.push("Sentry CLI Plugin: " + err.message)
+    //   },
+    // }),
   ],
 })
