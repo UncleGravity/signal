@@ -5,6 +5,9 @@ Fork of the amazing Signal website.
 3. VSCode will prompt to open devcontainer
 4. npm run start
 
+Project folder tree viz:
+https://mango-dune-07a8b7110.1.azurestaticapps.net/?repo=UncleGravity%2Fsignal
+
 # Signal
 
 A friendly music sequencer application built with web technology.
